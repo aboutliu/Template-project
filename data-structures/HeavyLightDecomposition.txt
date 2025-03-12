@@ -1,0 +1,99 @@
+std::vector<std::vector<std::pair<int, int>>> e;
+
+struct HeavyLightDecomposition {
+    int n, DFN = 0, rt = 1;
+    std::vector<int> L, R, dep, fa, top, sz, son, re;
+    HeavyLightDecomposition() {}
+    HeavyLightDecomposition(int _, int RT = 1) {
+        init(_, RT);
+    }
+    void init(int _, int RT) {
+        this->n = _;
+        this->rt = RT;
+        L.resize(n + 1);
+        R.resize(n + 1);
+        fa.resize(n + 1);
+        re.resize(n + 1);
+        sz.resize(n + 1);
+        son.resize(n + 1);
+        top.resize(n + 1);
+        dep.resize(n + 1);
+        dfs1(rt, 0);
+        dfs2(rt, rt);
+    }
+    void dfs1(int u, int F) { // 重链剖分
+        dep[u] = dep[F] + 1;
+        sz[u] = 1;
+        fa[u] = F;
+        son[u] = -1;
+        for (auto [v, w] : e[u]) {
+            if (v != F) {
+                dfs1(v, u);
+                sz[u] += sz[v];
+                if (son[u] == -1 || sz[v] > sz[son[u]]) {
+                    son[u] = v;
+                }
+            }
+        }
+    }
+    void dfs2(int u, int tp) { // top 为该重链的深度最小节点， dfn 顺序要按照重链遍历顺序
+        L[u] = ++DFN;
+        re[DFN] = u;
+        top[u] = tp;
+        if (son[u] == -1) {
+            R[u] = DFN;
+            return;
+        }
+
+        dfs2(son[u], tp);
+        for (auto [v, w] : e[u]) {
+            if (v != son[u] && v != fa[u]) {
+                dfs2(v, v);
+            }
+        }
+        R[u] = DFN;
+    }
+    int lca(int u, int v) {
+        while (top[u] != top[v]) {
+            if (dep[top[u]] > dep[top[v]]) {
+                u = fa[top[u]];
+            } else {
+                v = fa[top[v]];
+            }
+        }
+
+        return dep[u] < dep[v] ? u : v;
+    }
+    int Kth_ancestor(int u, int k) {
+        int fu = top[u];
+        while (dep[u] - dep[fu] < k && u != rt) {
+            k -= dep[u] - dep[fu] + 1;
+            u = fa[fu];
+            fu = top[u];
+        }
+
+        return re[L[u] - k];
+    }
+    //自定义函数
+    int rangesum(int u, int v, int z) {
+        int fu = top[u], fv = top[v];
+        int res = 0;
+        while (fu != fv) {
+            if (dep[fu] >= dep[fv]) {
+                // lseg.modify(1, L[fu], L[u], z);
+                u = fa[fu];
+            } else {
+                // lseg.modify(1, L[fv], L[v], z);
+                v = fa[fv];
+            }
+            fu = top[u];
+            fv = top[v];
+        }
+        if (dep[u] > dep[v]) {
+            // lseg.modify(1, L[v], L[u], z);
+        } else {
+            // lseg.modify(1, L[u], L[v], z);
+        }
+        return res;
+    }
+};

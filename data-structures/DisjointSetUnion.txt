@@ -1,0 +1,58 @@
+template <class T>
+struct DisjointSetUnion {
+    int n;
+    std::vector<T> f, sz, dep;
+    DisjointSetUnion() {}
+    DisjointSetUnion(int _) {
+        init(_);
+    }
+    void init(int _) {
+        n = _;
+        f.assign(n + 1, T{});
+        sz.assign(n + 1, 1);
+        dep.assign(n + 1, {});
+        std::iota(f.begin(), f.end(), 0);
+    }
+    int find(int x) {
+        while (x != f[x]) {
+            x = f[x] = f[f[x]];
+        }
+        return x;
+    }
+    int Find(int x) {
+        if (x != f[x]) {
+            int t = Find(f[x]);
+            dep[x] += dep[f[x]];
+            f[x] = t;
+        }
+        return f[x];
+    }
+    bool same(int u, int v) {
+        return find(u) == find(v);
+    }
+    bool Same(int u, int v) {
+        return Find(u) == Find(v);
+    }
+    void merge(int u, int v) {
+        int fu = Find(u), fv = Find(v);
+        if (fu == fv) {
+            return;
+        }
+        f[fv] = fu;
+        sz[fu] += sz[fv];
+    }
+    void Merge(int u, int v) {
+        int fu = Find(u), fv = Find(v);
+        if (fu == fv) {
+            return;
+        }
+        f[fv] = fu;
+        dep[v] = dep[u] + 1; 
+    }
+    int size(int u) {
+        return sz[find(u)];
+    }
+    int Size(int u) {
+        return sz[Find(u)];
+    }
+};

@@ -1,0 +1,35 @@
+template <class T>
+struct OldDriverTree {
+    int n;
+    std::set<T> odt;
+    OldDriverTree() {}
+    auto split(int x) {
+        auto it = odt.lower_bound({x});
+        if (it != odt.end() && it->l == x) { 
+            return it;
+        }
+        --it;
+        if (it->r < x) {
+            return odt.end();
+        }
+        int l = it->l, r = it->r;
+        char c = it->v;
+        odt.erase(it);
+        odt.insert({l, x - 1, c});
+        return odt.insert({x, r, c}).first;
+    }
+    void assign(int l, int r, char v) {
+        auto R = split(r + 1), L = split(l);
+        odt.erase(L, R);
+        odt.insert({l, r, v});
+    }
+};
+
+struct Info {
+    int l, r;
+    mutable char v;
+};
+
+bool operator < (const Info &u, const Info &v) {
+    return u.l < v.l;
+}

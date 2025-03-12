@@ -1,0 +1,112 @@
+std::vector<std::vector<std::array<int,2>>> e;
+
+struct VirtualTree {
+    int n, N;
+    int k, DFN = 0, RT, top = 0;
+    std::vector<int> L, R, ask, sta, dep, vis;
+    std::vector<i64> dp;
+    std::vector<std::vector<int>> fa;
+    std::vector<std::vector<int>> E;
+    VirtualTree() {}
+    VirtualTree(int _, int rt = 1) {
+        init(_, rt);
+    }
+    void init(int _, int rt = 1) {
+        this->n = _;
+        this->N = 31 - __builtin_clz(_);
+        this->RT = rt;
+        L.resize(n + 1);
+        R.resize(n + 1);
+        E.resize(n + 1);
+        dp.assign(n + 1, 1E18);
+        sta.resize(n + 1);
+        dep.resize(n + 1);
+        vis.resize(n + 1);
+        fa.assign(n + 1, std::vector<int>(N + 1, {}));
+        dfs(1, 0);
+    }
+    void dfs(int u, int F) {
+        L[u] = ++DFN;
+        fa[u][0] = F;
+        dep[u] = dep[F] + 1;
+        for (int i = 1; 1 << i <= dep[u]; ++i) {
+            fa[u][i] = fa[fa[u][i - 1]][i - 1];
+        }
+        for (auto [v, w] : e[u]) {
+            if (v != F) {
+                dp[v] = std::min<i64>(dp[u], w);
+                dfs(v, u);
+            }
+        }
+        R[u] = DFN;
+    }
+    int LCA(int u, int v) {
+        if (dep[u] < dep[v]) {
+            std::swap(u, v);
+        }
+        for (int i = N; i >= 0; --i) {
+            if (dep[fa[u][i]] >= dep[v]) {
+                u = fa[u][i];
+            }
+        }
+        if (u == v) {
+            return u;
+        }
+        for (int i = N; i >= 0; --i) {
+            if (fa[u][i] != fa[v][i]) {
+                u = fa[u][i];
+                v = fa[v][i];
+            }
+        }
+        return fa[u][0];
+    }
+    void add(int u, int v) {
+        E[u].push_back({v});
+        E[v].push_back({u});
+    }
+    void build() {
+        std::sort(ask.begin(), ask.end(), [&](auto u, auto v) {
+            return L[u] < L[v];
+        });
+
+        top = 1;
+        sta[top] = 1;
+        for (int i = 0; i < k; ++i) {
+            int lca = LCA(ask[i], sta[top]);
+            if (lca != sta[top]) {
+                while (L[lca] < L[sta[top - 1]]) {
+                    add(sta[top], sta[top - 1]);
+                    top--;
+                }
+                if (L[lca] > L[sta[top - 1]]) {
+                    add(lca, sta[top]);
+                    sta[top] = lca;
+                } else {
+                    add(lca, sta[top]);
+                    top--;
+                }
+            }
+            sta[top + 1] = ask[i];
+            top++;
+        }
+        for (int i = 1; i < top; ++i) {
+            add(sta[i], sta[i + 1]);
+        }
+    }
+    i64 DP(int u, int F) {
+        i64 sum = 0LL, t = 0LL;
+        for (auto v : E[u]) {
+            if (v != F) {
+                sum += DP(v, u);
+            }
+        }
+        if (vis[u]) {
+            t = dp[u];
+        } else {
+            t = std::min<i64>(dp[u], sum);
+        }
+        vis[u] = 0;
+        E[u].clear();
+        return t;
+    }
+};

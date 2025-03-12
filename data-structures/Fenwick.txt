@@ -1,0 +1,34 @@
+template <class T>
+struct Fenwick {
+    int N;
+    std::vector<T> f;
+    Fenwick() {}
+    Fenwick(int _) {
+        init(_);
+    }
+    void init(int _) {
+        N = _;
+        f.resize(_ + 1);
+    }
+    void add(int x, T v) {
+        for (int i = x; i <= N; i += (i bitand -i)) {
+            f[i] += v;
+        }
+    }
+    T query(int x) {
+        if (x > N or x <= 0) {
+            return T(0);
+        }
+        T res = 0;
+        for (int i = x; i; i -= (i bitand -i)) {
+            res += f[i];
+        }
+        return res;
+    }
+    T rangesum(int l, int r) {
+        if (l > r) {
+            return T(0);
+        }
+        return query(r) - query(l - 1);
+    }
+};

@@ -1,0 +1,90 @@
+constexpr int N = 1E6 + 10;
+
+int buf[N];
+int *f[N], *p = buf;
+
+std::vector<std::vector<int>> e;
+
+struct LongChainDecomposition {
+    int n, DFN = 0, rt;
+    std::vector<int> L, R, dep, fa, top, max, son, re, ans;
+    LongChainDecomposition(int _, int RT = 1) {
+        init(_, RT);
+    }
+
+    void init(int _, int RT) {
+        this->n = _;
+        this->rt = RT;
+        L.resize(n + 1);
+        R.resize(n + 1);
+        fa.resize(n + 1);
+        re.resize(n + 1);
+        max.resize(n + 1);
+        son.resize(n + 1);
+        top.resize(n + 1);
+        dep.resize(n + 1);
+        ans.resize(n + 1);
+        dfs1(rt, 0);
+        dfs2(rt, rt);
+        f[rt] = p;
+        p += max[rt] - dep[top[rt]] + 1;
+        solve(rt, 0);
+    }
+    void dfs1(int u, int F) { // 重链剖分
+        max[u] = dep[u] = dep[F] + 1;
+        fa[u] = F;
+        son[u] = -1;
+        for (auto v : e[u]) {
+            if (v != F) {
+                dfs1(v, u);
+                if (son[u] == -1 || max[v] > max[u]) {
+                    son[u] = v;
+                    max[u] = max[v];
+                }
+            }
+        }
+    }
+    void dfs2(int u, int tp) { // top 为该重链的深度最小节点， dfn 顺序要按照重链遍历顺序
+        L[u] = ++DFN;
+        re[DFN] = u;
+        top[u] = tp;
+        if (son[u] == -1) {
+            R[u] = DFN;
+            return;
+        }
+
+        dfs2(son[u], tp);
+        for (auto v : e[u]) {
+            if (v != son[u] && v != fa[u]) {
+                dfs2(v, v);
+            }
+        }
+        R[u] = DFN;
+    }
+    void solve(int u, int F) {
+        f[u][0] = 1;
+        if (son[u] != -1) {
+            f[son[u]] = f[u] + 1;
+            solve(son[u], u);
+            ans[u] = ans[son[u]] + 1;
+        }
+        for (auto v : e[u]) {
+            if (v != F && v != son[u]) {
+                f[v] = p;
+                p += max[v] - dep[top[v]] + 1;
+                solve(v, u);
+
+                int t = max[v] - dep[top[v]] + 1;
+                for (int j = 1; j <= t; ++j) {
+                    f[u][j] += f[v][j - 1];
+                    if ((f[u][j] > f[u][ans[u]]) || (f[u][j] == f[u][ans[u]] && j < ans[u])) {
+                        ans[u] = j;
+                    }
+                }
+            }
+        }
+        if (f[u][ans[u]] == 1) {
+            ans[u] = 0;
+        }
+    }
+};
