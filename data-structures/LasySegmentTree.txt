@@ -1,0 +1,135 @@
+template<class Info>
+struct LazySegmentTree {
+#define ls i << 1
+#define rs i << 1 | 1
+
+    int N;
+    std::vector<Info> seg;
+    LazySegmentTree() {}
+    LazySegmentTree(std::vector<int> a) {
+        init(a);
+    }
+    void init(std::vector<int> a) {
+        N = a.size();
+        seg.resize(N + 1 << 2);
+
+        auto build = [&](auto &&self, int i, int l, int r) {
+            seg[i] = {l, r};
+            seg[i].lz = -1;
+            if (l == r) {
+                seg[i].assign(a[l - 1]);
+                return ;
+            }
+            int mid = (l + r) / 2;
+            self(self, ls, l, mid);
+            self(self, rs, mid + 1, r);
+            pushup(i);
+        };
+
+        build(build, 1, 1, N);
+    }
+    void pushup(int i) {
+        seg[i] = seg[ls] + seg[rs];
+    }
+    void pushdown(int i) {
+        if (seg[i].lz != -1) {
+            seg[ls].apply(seg[i].lz);
+            seg[rs].apply(seg[i].lz);
+            seg[i].lz = -1;
+        }
+    }
+    void modify(int i, int l, int r, const int &v) {
+        if (l <= seg[i].l && seg[i].r <= r) {
+            seg[i].apply(v);
+            return ;
+        }
+        pushdown(i);
+        if (l <= seg[ls].r) {
+            modify(ls, l, r, v);
+        }
+        if (r >= seg[rs].l) {
+            modify(rs, l, r, v);
+        }
+        pushup(i);
+    }
+    void modify(int l, int r, const int &v) {
+        modify(1, l, r, v);
+    }
+    Info rangeInfo(int i, int l, int r) {
+        if (l <= seg[i].l && seg[i].r <= r) {
+            return seg[i];
+        }
+        pushdown(i);
+        if (l >= seg[rs].l) {
+            return rangeInfo(rs, l, r);
+        } else if (r <= seg[ls].r) {
+            return rangeInfo(ls, l, r);
+        } else {
+            return rangeInfo(ls, l, r) + rangeInfo(rs, l, r);
+        }
+    }
+    Info rangeInfo(int l, int r) {
+        return rangeInfo(1, l, r);
+    }
+    template<class F>
+    int findFirst(int i, int l, int r, F &&pred) {
+        if (seg[i].l > r || seg[i].r < l || !pred(seg[i])) {
+            return -1;
+        }
+        if (seg[i].l == seg[i].r) {
+            return seg[i].l;
+        }
+        pushdown(i);
+        int res = findFirst(ls, l, r, pred);
+        if (res == -1) {
+            res = findFirst(rs, l, r, pred);
+        }
+        return res;
+    }
+    template<class F>
+    int findFirst(int l, int r, F &&pred) {
+        return findFirst(1, l, r, pred);
+    }
+    template<class F>
+    int findLast(int i, int l, int r, F &&pred) {
+        if (seg[i].l > r || seg[i].r < l || !pred(seg[i])) {
+            return -1;
+        }
+        if (seg[i].l == seg[i].r) {
+            return seg[i].l;
+        }
+        pushdown(i);
+        int res = findLast(rs, l, r, pred);
+        if (res == -1) {
+            res = findLast(ls, l, r, pred);
+        }
+        return res;
+    }
+    template<class F>
+    int findLast(int l, int r, F &&pred) {
+        return findFirst(1, l, r, pred);
+    }
+};
+
+struct Info {
+    int l, r;
+    int sum;
+    int lz;
+    void assign(int x) {
+        sum = x;   
+    }
+    void apply(int x) {
+        int c = r - l + 1;
+        sum = c * x;
+        lz = x;
+    }
+};
+
+Info operator + (const Info &u, const Info &v) {
+    Info res = {};
+    res.l = u.l;
+    res.r = v.r;
+    res.lz = -1;
+    res.sum = u.sum + v.sum;
+    return res;
+}
