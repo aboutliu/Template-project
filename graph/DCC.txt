@@ -1,0 +1,61 @@
+std::vector<std::vector<int>> e, V;
+int p;
+
+struct DCC {
+    int DFN = 0, DCC_count = 0;
+    std::vector<int> dfn, low, flag, sta, f;
+    DCC(int _) {
+        init(_);
+    }
+
+    void init(int n) {
+        dfn.resize(n + 1);
+        low.resize(n + 1);
+        flag.resize(n + 1);
+        f.resize(n + 1);
+        sta.clear();
+    }
+
+    void tarjan(int u, int F) {
+        sta.emplace_back(u);
+        low[u] = dfn[u] = ++DFN;
+        int son = 0;
+        for (auto v : e[u]) {
+            if (!dfn[v]) {
+                ++son;
+                tarjan(v, u);
+                low[u] = std::min(low[u], low[v]);
+                if (low[v] >= dfn[u]) {
+                    std::vector<int> t;
+                    int y;
+                    ++p;
+                    do {
+                        y = sta.back();
+                        sta.pop_back();
+
+                        t.emplace_back(y);
+                    } while (y != v);
+                    t.emplace_back(u);
+                    V.emplace_back(t);
+                    if (u != F && !flag[u]) {
+                        flag[u] = 1;
+                        ++DCC_count;
+                    } 
+                }
+            } else {
+                low[u] = std::min(low[u], dfn[v]);
+            }
+        }
+        if (F == u && son > 1 && !flag[u]) {
+            flag[u] = 1;
+            ++DCC_count;
+        }
+        if (F == u && !son) {
+            ++p;
+            int y = sta.back();
+            sta.pop_back();
+
+            V.emplace_back(std::vector<int> {y});
+        }
+    }
+};

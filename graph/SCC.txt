@@ -1,0 +1,60 @@
+std::vector<std::vector<int>> e, E;
+std::vector<int> a, w; 
+int p;
+
+struct SCC {
+    int n, DFN = 0;
+    std::vector<int> dfn, low, vis, sta, id, in;
+    SCC(int _) {
+        init(_);
+    }
+
+    void init(int _) {
+        n = _;
+        dfn.resize(n + 1);
+        low.resize(n + 1);
+        vis.resize(n + 1);
+        id.resize(n + 1);
+        in.resize(n + 1);
+        sta.clear();
+    }
+
+    void tarjan(int u) {
+        dfn[u] = low[u] = ++DFN;
+        vis[u] = 1;
+        sta.emplace_back(u);
+        for (auto v : e[u]) {
+            if (!dfn[v]) {
+                tarjan(v);
+                low[u] = std::min(low[u], low[v]);
+            } else if (vis[v]) {
+                low[u] = std::min(low[u], dfn[v]);
+            }
+        }
+        if (dfn[u] == low[u]) {
+            int y;
+            ++p;
+            do {
+                y = sta.back();
+                sta.pop_back();
+
+                vis[y] = 0;
+                id[y] = p;
+            } while (y != u);
+        }
+    }
+
+    void Graph() {
+        w.resize(p + 1);
+        E.resize(p + 1);
+        for (int i = 1; i <= n; ++i) {
+            for (auto v : e[i]) {
+                if (id[i] != id[v]) {
+                    E[id[i]].emplace_back(id[v]);
+                    ++in[id[v]];
+                }
+            }
+            w[id[i]] += a[i];
+        }
+    }
+};
