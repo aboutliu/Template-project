@@ -1,4 +1,3 @@
-template <class T>
 struct BitTrie {
     int id = 0, N;
     std::vector<std::array<int, 2>> trie {std::array<int, 2>()};
