@@ -97,7 +97,7 @@ struct SegmentTree {
     }
     template<class F>
     int findLast(int l, int r, F &&pred) {
-        return findFirst(1, l, r, pred);
+        return findLast(1, l, r, pred);
     }
 };
 
