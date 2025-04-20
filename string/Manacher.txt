@@ -1,0 +1,36 @@
+struct Manacher {
+    int N;
+    std::vector<int> p;
+    std::vector<char> S;
+    Manacher() {}
+    Manacher(std::string s) {
+        init(2 * s.size() + 3);
+        work(s);
+    }
+    void init(int _) {
+        this->N = _;
+        p.assign(N, {});
+        S.assign(N, {});
+    }
+    void work(std::string s) {
+        int n = 0, len = int(s.size());
+        S[++n] = '%';
+        S[++n] = '#';
+        for (int i = 0; i < len; ++i) {
+            S[++n] = s[i];
+            S[++n] = '#';
+        }
+        S[++n] = '!';
+        int mid = 0, r = 0;
+        for (int i = 2; i < N; ++i) { // l = (i - p[i]) / 2 + 1, r = (i - p[i]) / 2 - 1，l,r 是对称端点从 1 开始
+            p[i] = i <= r ? std::min(p[mid *  2 - i], r - i + 1) : 1;
+            while (S[i + p[i]] == S[i - p[i]]) {
+                ++p[i];
+            }
+            if (i + p[i] > r) {
+                r = i + p[i] - 1;
+                mid = i;
+            }
+        }
+    }
+};
