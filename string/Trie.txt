@@ -1,0 +1,58 @@
+template<class T>
+struct Trie {
+    int id = 0;
+    std::vector<std::map<T, int>> trie {std::map<T, int>()};
+    std::vector<int> ed {0}, sz {0};
+    Trie() {}
+    void init() {
+    	ed.assign(1, {});
+    	sz.assign(1, {});
+    	trie.assign(1, std::map<T, int>());
+    }
+    void insert(std::string s, int u = 1, int v = 1) { // 插入 s
+        int p = 0;
+        for (auto it : s) {
+            if (!trie[p][it]) {
+                trie[p][it] = ++id;
+                trie.push_back(std::map<T, int>());
+                ed.push_back({});
+                sz.push_back({});
+            }
+            p = trie[p][it];
+            sz[p] += u;
+        }
+        ed[p] += v;
+    }
+    int exactfind(std::string s) { // s 是否存在
+        int p = 0;
+        for (auto it : s) {
+            if (!trie[p][it]) {
+                return 0;
+            }
+            p = trie[p][it];
+        }
+        return 1;
+    }
+    int prefixcount(std::string s) { // s 不为空的前缀数量和
+    	int p = 0, res = 0;
+    	for (auto it : s) {
+    		if (!trie[p][it]) {
+    			return res;
+    		}
+    		p = trie[p][it];
+    		res += ed[p];
+    	}
+    	return res;
+    }
+    int suffixcount(std::string s) { // s 不为空的后缀数量和
+    	int p = 0;
+    	for (auto it : s) {
+    		if (!trie[p][it]) {
+    			return 0;
+    		}
+    		p = trie[p][it];
+    	}
+    	return sz[p];
+    }
+    // 自定义函数
+};
