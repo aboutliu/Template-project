@@ -1,0 +1,33 @@
+class Fenwick:
+	def __init__(self, N):
+		self.n = N
+		self.f = [0] * (self.n + 1)
+
+	def add(self, x, v):
+		while x <= self.n:
+			self.f[x] += v
+			x += x & -x
+
+	def query(self, x):
+		if x > self.n or x <= 0:
+			return 0
+		res = 0
+		while x > 0:
+			res += self.f[x]
+			x -= x & -x
+		return res
+
+	def rangesum(self, l, r):
+		if l > r:
+			return 0
+		return self.query(r) - self.query(l - 1)
+
+	def select(self, k):
+		cur = x = 0
+		i = 1 << self.n.bit_length()
+		while i:
+			if x + i <= self.n and cur + self.f[x + i] <= k:
+				x += i
+				cur += self.f[x]
+			i >>= 1
+		return x
