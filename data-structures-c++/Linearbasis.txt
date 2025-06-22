@@ -1,0 +1,95 @@
+template <class T>
+struct LinearBasis {
+    int N, cnt = 0;
+    T Min = std::numeric_limits<T>::max();
+    std::vector<T> basis, d, ord;
+    LinearBasis() {}
+    LinearBasis(std::vector<T> a) {
+        init(std::ranges::max(a));
+        for (auto i : a) {
+            Min = std::min(Min, i);
+            insert(i);
+        }
+    }
+    LinearBasis(T _) {
+        init(_);
+    }
+    void init(T _) {
+        this->N = std::bit_width(1ULL * _);
+        basis.assign(N, 0);
+        d.assign(N, 0);
+    }
+    void insert(T x) { // 插入一个数
+        for (int i = N - 1; i >= 0; --i) {
+            if (x >> i & 1) {
+                if (!basis[i]) {
+                    basis[i] = x;
+                    cnt++;
+                    ord.emplace_back(x);
+                    return;
+                } else {
+                    x ^= basis[i];
+                }
+            }
+        }
+    }
+    int size() { // 获取线性基元素数量
+        return cnt;
+    }
+    T getmax() { // 异或最大值
+        T res = 0;
+        for (int i = N - 1; i >= 0; --i) {
+            res = std::max(res, res ^ basis[i]);
+        }
+        return res;
+    }
+    T getmin() { // 异或最大值
+        T res = Min;
+        for (int i = 0; i < N; --i) {
+            if (basis[i]) {
+                res = std::min(res, basis[i]);
+                return res;
+            }
+        }
+        return res;
+    }
+    bool check(T x) { // 是否在线性基中
+        for (int i = N - 1; i >= 0; --i) {
+            if (x >> i & 1) {
+                if (!basis[i]) {
+                    return false;
+                }
+                x ^= basis[i];
+            }
+        }
+        return true;
+    }
+    void build() { // 构造线性基向量数组
+    	for (int i = N - 1; i >= 0; --i) {
+    		for (int j = i - 1; j >= 0; --j) {
+    			if (basis[i] >> j & 1) {
+    				basis[i] ^= basis[j];
+    			}
+    		}
+    	}
+    	cnt = 0;
+    	for (int i = 0; i < N; ++i) {
+    		if (basis[i]) {
+    			d[cnt++] = basis[i];
+    		}
+    	}
+    }
+    T kth(const T k) { // 查询 k 大异或值
+    	build();
+    	T res = 0;
+    	if (k >= (1LL << cnt)) {
+    		return -1;
+    	}
+    	for (int i = N - 1; i >= 0; --i) {
+    		if (k >> i & 1) {
+    			res ^= d[i];
+    		}
+    	}
+    	return res;
+    }
+};
